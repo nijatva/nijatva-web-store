@@ -145,7 +145,8 @@
     padding:12px 14px;font-size:13.5px;box-shadow:0 10px 30px rgba(0,0,0,.45)}
   .hintbar.on{display:block}
   /* ---------- the pieces the new sheet and toolbar need ---------- */
-  .toolbar{display:flex;align-items:center;gap:10px;padding:0 18px 10px;flex-wrap:wrap}
+  .toolbar{display:flex;align-items:center;gap:10px;padding:8px 18px 10px;flex-wrap:wrap;
+           position:sticky;top:0;z-index:12;background:var(--bg)}
   .toolbar .grow{flex:1}
   .toolbar .count{padding:0;color:var(--mut);font-size:13.5px}
   .sel{appearance:none;-webkit-appearance:none;background:var(--surf2);color:var(--fg);
@@ -153,6 +154,33 @@
        font-size:13px;font-family:inherit;cursor:pointer;
        background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239aa0a6' stroke-width='2.4' stroke-linecap='round'><path d='M5 9l7 7 7-7'/></svg>");
        background-repeat:no-repeat;background-position:right 11px center}
+  /* the sort list is a sheet of this page, not the system's grey dialog */
+  .sortbtn{display:inline-flex;align-items:center;gap:7px;background:var(--surf2);color:var(--fg);
+           border:1px solid var(--line);border-radius:999px;padding:8px 14px;font-size:13px;
+           font-family:inherit;cursor:pointer;line-height:1.2}
+  .sortbtn:active{transform:scale(.98)}
+  .sortbtn .chev{opacity:.55;font-size:10px;line-height:1}
+  .sortsheet{position:fixed;inset:0;z-index:70;display:none}
+  .sortsheet.on{display:block}
+  .sortsheet .bg{position:absolute;inset:0;background:rgba(0,0,0,.55);
+                 backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+  .sortsheet .panel{position:absolute;left:10px;right:10px;bottom:10px;background:var(--surf);
+                    border:1px solid var(--line);border-radius:20px;overflow:hidden;
+                    box-shadow:0 24px 64px rgba(0,0,0,.5);
+                    animation:sortsUp .18s cubic-bezier(.2,.8,.2,1)}
+  @keyframes sortsUp{from{transform:translateY(16px);opacity:.5}to{transform:none;opacity:1}}
+  .sorthead{padding:14px 18px 10px;font-size:12px;letter-spacing:.8px;text-transform:uppercase;
+            color:var(--mut);font-weight:700;border-bottom:1px solid var(--line)}
+  .sortopt{display:flex;align-items:center;gap:12px;padding:15px 18px;font-size:15px;color:var(--fg);
+           border-bottom:1px solid var(--line);cursor:pointer;background:none;width:100%;
+           font-family:inherit;text-align:start}
+  .sortopt:last-child{border-bottom:0}
+  .sortopt:active{background:var(--surf2)}
+  .sortopt .radio{width:19px;height:19px;border-radius:50%;border:2px solid var(--line);
+                  margin-left:auto;flex:none;position:relative}
+  .sortopt.on .radio{border-color:var(--brand)}
+  .sortopt.on .radio::after{content:"";position:absolute;inset:3px;border-radius:50%;background:var(--brand)}
+  .sortopt.on{color:var(--brand)}
   .sec-t{font-size:11.5px;letter-spacing:1px;color:var(--mut);font-weight:700;
          margin:20px 0 6px;text-transform:uppercase}
   .trust{margin:0;padding:0;list-style:none}
@@ -635,17 +663,38 @@
     return out;
   }
 
+  var SORT_OPTS = [['rec', 'sortRec'], ['az', 'sortAZ'], ['za', 'sortZA'],
+                   ['small', 'sortSmall'], ['narrow', 'sortNarrow']];
+
+  function sortLabel() {
+    for (var i = 0; i < SORT_OPTS.length; i++) if (SORT_OPTS[i][0] === sort) return t(SORT_OPTS[i][1]);
+    return t('sort');
+  }
+
   function toolbar(n) {
-    var opts = [['rec', t('sortRec')], ['az', t('sortAZ')], ['za', t('sortZA')],
-                ['small', t('sortSmall')], ['narrow', t('sortNarrow')]];
-    var h = '<div class="toolbar"><span class="count" style="padding:0">' +
+    return '<div class="toolbar"><span class="count" style="padding:0">' +
       esc(t('found', { n: n })) + '</span><span class="grow"></span>' +
-      '<label class="sr" for="sort">' + esc(t('sort')) + '</label>' +
-      '<select class="sel" id="sort">';
-    opts.forEach(function (o) {
-      h += '<option value="' + o[0] + '"' + (sort === o[0] ? ' selected' : '') + '>' + esc(o[1]) + '</option>';
+      '<button class="sortbtn" id="sortBtn" aria-haspopup="dialog">' + esc(sortLabel()) +
+      '<span class="chev">&#9662;</span></button></div>';
+  }
+
+  /* The list of orders, drawn in this page rather than by the system: a grey
+     Material dialog in the middle of a dark store reads like a different app. */
+  function openSort() {
+    var panel = document.getElementById('sortpanel');
+    if (!panel) return;
+    var h = '<div class="sorthead">' + esc(t('sort')) + '</div>';
+    SORT_OPTS.forEach(function (o) {
+      h += '<button class="sortopt' + (sort === o[0] ? ' on' : '') + '" data-sort="' + o[0] + '">' +
+        esc(t(o[1])) + '<span class="radio"></span></button>';
     });
-    return h + '</select></div>';
+    panel.innerHTML = h;
+    document.getElementById('sortsheet').classList.add('on');
+  }
+
+  function closeSort() {
+    var s = document.getElementById('sortsheet');
+    if (s) s.classList.remove('on');
   }
 
   function refreshIns() {
@@ -999,6 +1048,8 @@
     side.setAttribute('aria-hidden', 'true');
   });
   document.getElementById('sscrim').addEventListener('click', closeSheet);
+  var sbg = document.getElementById('sortbg');
+  if (sbg) sbg.addEventListener('click', closeSort);
 
   document.addEventListener('keydown', function (ev) {
     if (ev.key === 'Escape') {
@@ -1017,9 +1068,13 @@
     }
   });
 
-  document.addEventListener('change', function (ev) {
-    if (ev.target && ev.target.id === 'sort') {
-      sort = ev.target.value;
+  document.addEventListener('click', function (ev) {
+    var target = ev.target;
+    if (target.closest && target.closest('#sortBtn')) { openSort(); return; }
+    var opt = target.closest ? target.closest('[data-sort]') : null;
+    if (opt) {
+      sort = opt.getAttribute('data-sort');
+      closeSort();
       render();
     }
   });
@@ -1128,4 +1183,9 @@
   load();
 })();
 </script>
+
+<div class="sortsheet" id="sortsheet" role="dialog" aria-modal="true" aria-label="Sort">
+  <div class="bg" id="sortbg"></div>
+  <div class="panel" id="sortpanel"></div>
+</div>
 </body></html>
