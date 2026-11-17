@@ -3,7 +3,7 @@
 A script store for the **Nijatva** and **Aekant** browsers. The catalogue lives
 in its own repository so it can grow without an app release.
 
-Live page: **https://vasudev-work.github.io/nijatva-web-store/**
+Live page: **https://nijatva.github.io/nijatva-web-store/**
 
 ---
 
@@ -120,7 +120,7 @@ signs it locally.
 
 ### 1. The store page: one tap, no signature needed
 
-Open **https://vasudev-work.github.io/nijatva-web-store/** inside Nijatva (or
+Open **https://nijatva.github.io/nijatva-web-store/** inside Nijatva (or
 Aekant) and tap *Add*. The page hands the app a link:
 
 ```
@@ -140,7 +140,7 @@ Opened in another browser the page still works as a catalogue. Each card has
 *Extensions → Remote source* → set it to:
 
 ```
-https://raw.githubusercontent.com/vasudev-work/nijatva-web-store/main/extensions/
+https://raw.githubusercontent.com/nijatva/nijatva-web-store/main/extensions/
 ```
 
 Then *Check*. The list appears next to the built-in catalogue. This route needs
@@ -151,7 +151,7 @@ a valid signature (see above).
 Any raw URL works directly:
 
 ```
-https://raw.githubusercontent.com/vasudev-work/nijatva-web-store/main/extensions/back-to-top.js
+https://raw.githubusercontent.com/nijatva/nijatva-web-store/main/extensions/back-to-top.js
 ```
 
 ---
@@ -159,7 +159,7 @@ https://raw.githubusercontent.com/vasudev-work/nijatva-web-store/main/extensions
 ## Notes
 
 **Script fetches try the main repo's CDN first.** `ExtStore.SCRIPT_BASE` points at
-`cdn.jsdelivr.net/gh/vasudev-work/nijatva-browser@main/extensions/`, so a script
+`cdn.jsdelivr.net/gh/nijatva/nijatva-browser@main/extensions/`, so a script
 fetched from here costs one failed request before the fallback to this
 repository answers. Pointing `SCRIPT_BASE` at this repo in the app removes that hop.
 
