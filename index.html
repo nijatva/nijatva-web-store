@@ -8,6 +8,8 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="icon" type="image/png" sizes="512x512" href="favicon-512.png">
 <link rel="apple-touch-icon" href="favicon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="canonical" href="https://vasudev-work.github.io/nijatva-web-store/">
 <meta property="og:url" content="https://vasudev-work.github.io/nijatva-web-store/">
 <meta property="og:type" content="website">
@@ -1024,6 +1026,25 @@
     clearTimeout(qt);
     qt = setTimeout(render, 120);
   });
+
+  // Install: offered only when the browser says so, hidden once it is installed.
+  var installEvt = null;
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault(); installEvt = e;
+    var b = document.getElementById('installBtn');
+    if (b) b.style.display = '';
+  });
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('#installBtn');
+    if (!b || !installEvt) return;
+    installEvt.prompt();
+    installEvt.userChoice.then(function () { installEvt = null; b.style.display = 'none'; });
+  });
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('sw.js').catch(function () { });
+    });
+  }
 
   document.getElementById('theme').addEventListener('click', function () {
     theme = theme === 'dark' ? 'light' : 'dark';
